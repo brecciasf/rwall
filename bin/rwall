@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Get the rwall root directory
+rwall_root_directory="$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))"
+
+# Navigate to the rwall root directory
+cd $rwall_root_directory
+
+# Create the tmp directory if it doesn't already exist
+mkdir -p tmp
+
+# Remove all files in the rwall/tmp directory
+rm -r tmp/*
+
+# Download the html based on our search parameters
+wget 'http://wallbase.cc/search?q=space&color=&section=wallpapers&res_opt=eqeq&res=1920x1080&order_mode=desc&order=random&thpp=32&purity=100&board=21&aspect=0.00' -O tmp/wallbase.html
+
+# grep the image ID
+id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallbase.html | grep -o [0-9].*[0-9])
+
+# Some variables to help us know if we found the image and what file type it is
+image_found=1
+file_type=""
+
+# JPG
+if [ $image_found -eq 1 ];
+then
+	wget_image=$(wget http://wallpapers.wallbase.cc/rozne/wallpaper-$id.jpg -O tmp/wallpaper-$id.jpg)
+	if [ $? -eq 0 ]
+	then
+		image_found=0
+		file_type="jpg"
+	fi
+fi
+
+# PNG
+if [ $image_found -eq 1 ];
+then
+	wget_image=$(wget http://wallpapers.wallbase.cc/rozne/wallpaper-$id.png -O tmp/wallpaper-$id.png)
+	if [ $? -eq 0 ]
+	then
+		image_found=0
+		file_type="png"
+	fi
+fi
+
+# This will make sure we have access to Unity even if the screen is locked
+lib/discover_session_bus_address.sh unity
+
+# Change the wallpaper
+gsettings set org.gnome.desktop.background picture-uri "file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
+echo ROOT - $rwall_root_directory
