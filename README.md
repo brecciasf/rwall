@@ -1,5 +1,5 @@
 # rwall
-rwall is a very simple wallbase.cc image scraper.  A query is run against wallbase which returns images (currently set to space themed images only) in a random order.  It will take the top one off the list, download that file (currently only .JPG and .PNG files are supported), and applies that image as the desktop wallpaper.
+rwall is a very simple wallbase.cc image scraper.  A query is run against wallbase which returns images (currently set to space themed images in the ini file) in a random order.  It will take the top one off the list, download that file (currently only .JPG and .PNG files are supported), and applies that image as the desktop wallpaper.
 
 ## Supported Platforms
 The only testing I've done with this program (which is a bash script) has been on Ubuntu 14.04.  My assumption is that it should work on other versions of Ubuntu and possibly some other distros, but I have not tested so I can't be sure.  Feel free to try and modify as needed!  :)
@@ -7,6 +7,8 @@ The only testing I've done with this program (which is a bash script) has been o
 ## Running rwall
 In order to run rwall
 
+1. Change any settings in the /path/to/rwall/etc/rwall.ini file as you see fit
+  1. Currently you can change the search string (a single word) and the image resolution
 1. Make sure that the /path/to/rwall/bin/rwall file is executable
 1. Run the /path/to/rwall/bin/rwall bash script from a terminal window
   1. This should take a few seconds.  You'll see the files being downloaded and soon your desktop wallpaper will change.
