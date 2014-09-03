@@ -35,5 +35,6 @@ Enjoy rwall!  It's very simple, but it gets the job done.  :)
 
 ## Potential Future Project Goals
 * Add a config file to allow the query to wallbase.cc to be easily editable instead of it being hard coded
+  * [Done] - You can change the search string as well as the image resolution in the ini file
 * Add a GUI to change settings in the config file as well as the cron job (so an entry-level linux user could easily use this program)
 * Package it up for easy distribution (I've never done this, but it would be neat to learn how)
