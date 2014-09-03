@@ -12,8 +12,11 @@ mkdir -p tmp
 # Remove all files in the rwall/tmp directory
 rm -r tmp/*
 
+# Read the ini file for parameters
+q=$(grep q= etc/rwall.ini | cut -f2- -d '=')
+
 # Download the html based on our search parameters
-wget 'http://wallbase.cc/search?q=space&color=&section=wallpapers&res_opt=eqeq&res=1920x1080&order_mode=desc&order=random&thpp=32&purity=100&board=21&aspect=0.00' -O tmp/wallbase.html
+wget "http://wallbase.cc/search?q=$q&color=&section=wallpapers&res_opt=eqeq&res=1920x1080&order_mode=desc&order=random&thpp=32&purity=100&board=21&aspect=0.00" -O tmp/wallbase.html
 
 # grep the image ID
 id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallbase.html | grep -o [0-9].*[0-9])
