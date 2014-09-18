@@ -17,10 +17,11 @@ q=$(grep q= etc/rwall.ini | cut -f2- -d '=')
 res=$(grep res= etc/rwall.ini | cut -f2- -d '=')
 
 # Download the html based on our search parameters
-wget "http://wallbase.cc/search?q=$q&color=&section=wallpapers&res_opt=eqeq&res=$res&order_mode=desc&order=random&thpp=32&purity=100&board=21&aspect=0.00" -O tmp/wallbase.html
+wget "http://alpha.wallhaven.cc/wallpaper/search?q=$q&categories=111&purity=100&resolutions=$res&sorting=random&order=asc" -O tmp/wallhaven.html
 
 # grep the image ID
-id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallbase.html | grep -o [0-9].*[0-9])
+#id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallhaven.html | grep -o [0-9].*[0-9])
+id=$(grep -o -m 1 'data-src=.*"' tmp/wallhaven.html | grep -o [0-9].*[0-9])
 
 # Some variables to help us know if we found the image and what file type it is
 image_found=1
@@ -29,7 +30,7 @@ file_type=""
 # JPG
 if [ $image_found -eq 1 ];
 then
-	wget_image=$(wget http://wallpapers.wallbase.cc/rozne/wallpaper-$id.jpg -O tmp/wallpaper-$id.jpg)
+	wget_image=$(wget http://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.jpg -O tmp/wallpaper-$id.jpg)
 	if [ $? -eq 0 ]
 	then
 		image_found=0
@@ -40,7 +41,7 @@ fi
 # PNG
 if [ $image_found -eq 1 ];
 then
-	wget_image=$(wget http://wallpapers.wallbase.cc/rozne/wallpaper-$id.png -O tmp/wallpaper-$id.png)
+	wget_image=$(wget http://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.png -O tmp/wallpaper-$id.png)
 	if [ $? -eq 0 ]
 	then
 		image_found=0
