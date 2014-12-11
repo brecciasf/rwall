@@ -17,7 +17,7 @@ q=$(grep q= etc/rwall.ini | cut -f2- -d '=')
 res=$(grep res= etc/rwall.ini | cut -f2- -d '=')
 
 # Download the html based on our search parameters
-wget "http://alpha.wallhaven.cc/wallpaper/search?q=$q&categories=111&purity=100&resolutions=$res&sorting=random&order=asc" -O tmp/wallhaven.html
+wget "http://alpha.wallhaven.cc/search?q=$q&categories=111&purity=100&resolutions=$res&sorting=random&order=asc" -O tmp/wallhaven.html
 
 # grep the image ID
 #id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallhaven.html | grep -o [0-9].*[0-9])
@@ -54,5 +54,6 @@ fi
 PID=$(pgrep gnome-session)
 export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
 
+echo "About to test: file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
 # Change the wallpaper
 gsettings set org.gnome.desktop.background picture-uri "file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
