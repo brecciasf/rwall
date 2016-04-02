@@ -21,7 +21,7 @@ wget "http://alpha.wallhaven.cc/search?q=$q&categories=111&purity=100&resolution
 
 # grep the image ID
 #id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallhaven.html | grep -o [0-9].*[0-9])
-id=$(grep -o -m 1 'data-src=.*"' tmp/wallhaven.html | grep -o [0-9].*[0-9])
+id=$(grep -oP 'wallpaper-id="\K[^"]*' tmp/wallhaven.html | head -1)
 
 # Some variables to help us know if we found the image and what file type it is
 image_found=1
@@ -49,11 +49,5 @@ then
 	fi
 fi
 
-# export DBUS_SESSION_BUS_ADDRESS environment variable
-# Necessary for this script to run as cron job
-PID=$(pgrep gnome-session)
-export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
-
-echo "About to test: file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
 # Change the wallpaper
 gsettings set org.gnome.desktop.background picture-uri "file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
