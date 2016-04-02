@@ -2,7 +2,7 @@
 rwall is a very simple wallbase.cc image scraper.  A query is run against wallbase which returns images (currently set to space themed images in the ini file) in a random order.  It will take the top one off the list, download that file (currently only .JPG and .PNG files are supported), and applies that image as the desktop wallpaper.
 
 ## Supported Platforms
-The only testing I've done with this program (which is a bash script) has been on Ubuntu 14.04.  My assumption is that it should work on other versions of Ubuntu and possibly some other distros, but I have not tested so I can't be sure.  Feel free to try and modify as needed!  :)
+The only testing I've done with this program (which is a bash script) has been on Linux Mint 17.3 (Cinnamon).  My assumption is that it should work on other versions of Mint, Ubuntu, and possibly some other distros, but I have not tested so I can't be sure.  Feel free to try and modify as needed!  :)
 
 ## Running rwall
 In order to run rwall
@@ -26,7 +26,7 @@ You can also set up rwall to run as a cron job via crontab
 1. At the end of the file type the following (substituting /path/to/rwall for the actual path on your system)
 
     ```bash
-    0,30 * * * * /path/to/rwall/bin/rwall
+    0,30 * * * * DISPLAY=:0.0 /path/to/rwall/bin/rwall
     ````
 
 1. Save and exit crontab
