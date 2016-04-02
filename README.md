@@ -1,5 +1,5 @@
 # rwall
-rwall is a very simple wallbase.cc image scraper.  A query is run against wallbase which returns images (currently set to space themed images in the ini file) in a random order.  It will take the top one off the list, download that file (currently only .JPG and .PNG files are supported), and applies that image as the desktop wallpaper.
+rwall is a very simple wallhaven.cc image scraper.  A query is run against wallhaven which returns images (currently set to space themed images in the ini file) in a random order.  It will take the top one off the list, download that file (currently only .JPG and .PNG files are supported), and applies that image as the desktop wallpaper.
 
 ## Supported Platforms
 The only testing I've done with this program (which is a bash script) has been on Linux Mint 17.3 (Cinnamon).  My assumption is that it should work on other versions of Mint, Ubuntu, and possibly some other distros, but I have not tested so I can't be sure.  Feel free to try and modify as needed!  :)
@@ -36,7 +36,5 @@ With those steps you will now have your desktop wallpaper changing every thirty 
 Enjoy rwall!  It's very simple, but it gets the job done.  :)
 
 ## Potential Future Project Goals
-* Add a config file to allow the query to wallbase.cc to be easily editable instead of it being hard coded
-  * [Done] - You can change the search string as well as the image resolution in the ini file
 * Add a GUI to change settings in the config file as well as the cron job (so an entry-level linux user could easily use this program)
 * Package it up for easy distribution (I've never done this, but it would be neat to learn how)
