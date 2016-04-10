@@ -3,6 +3,27 @@
 # Get the rwall root directory
 rwall_root_directory="$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))"
 
+# This is the line that will be place in or removed from the crontab
+cronEntry="0,30 * * * * DISPLAY=:0.0 $rwall_root_directory/bin/rwall"
+
+# Toggles the rwall cron job in crontab
+if [[ $1 == "toggle-cron" ]];
+then
+    # Check if rwall is already installed in crontab
+    crontabGrepRwall="$(crontab -l | grep 'rwall')"
+    
+    # If the string is empty, then rwall is not in crontab
+    if [[ $crontabGrepRwall == "" ]];
+    then
+        (crontab -l; echo "$cronEntry") | crontab -
+    else
+        # Add the cron entry, but first change the cron entry string to replace all '*' with '\*' for sed to work
+        crontab -l | sed "\|${cronEntry//[*]/\\*}|d" | crontab -
+    fi
+    
+    exit
+fi
+
 # Navigate to the rwall root directory
 cd $rwall_root_directory
 
