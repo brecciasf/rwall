@@ -3,7 +3,7 @@
 # Get the rwall root directory
 rwall_root_directory="$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))"
 
-# This is the line that will be place in or removed from the crontab
+# This is the line that will be placed in or removed from the crontab
 cronEntry="0,30 * * * * DISPLAY=:0.0 $rwall_root_directory/bin/rwall"
 
 # Toggles the rwall cron job in crontab
