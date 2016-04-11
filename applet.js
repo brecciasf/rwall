@@ -15,7 +15,7 @@ MyApplet.prototype = {
     _init: function(orientation, panel_height, instance_id) {
         Applet.IconApplet.prototype._init.call(this, orientation, panel_height, instance_id);
 
-        this.set_applet_icon_name('cs-backgrounds');
+        this.set_applet_icon_path(AppletDir + '/icon.png');
         this.set_applet_tooltip(_('Interact with rwall'));
         
         // The menu manager closes the menu after focus has changed.
