@@ -15,10 +15,15 @@ then
     # If the string is empty, then rwall is not in crontab
     if [[ $crontabGrepRwall == "" ]];
     then
+        # Add the cron entry
         (crontab -l; echo "$cronEntry") | crontab -
+        
+        # Remove the lock file
+        touch $rwall_root_directory/etc/USING-CRON.lock
     else
-        # Add the cron entry, but first change the cron entry string to replace all '*' with '\*' for sed to work
+        # Remove the cron entry, but first change the cron entry string to replace all '*' with '\*' for sed to work
         crontab -l | sed "\|${cronEntry//[*]/\\*}|d" | crontab -
+        rm $rwall_root_directory/etc/USING-CRON.lock
     fi
     
     exit

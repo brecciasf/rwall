@@ -1,0 +1,7 @@
+{
+    "uuid": "rwall",
+    "name": "rwall",
+    "description": "Interact with rwall",
+    "icon": "cs-backgrounds",
+    "max-instances": -1
+}
