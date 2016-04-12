@@ -24,5 +24,11 @@
         "type": "entry",
         "default": "0,30 * * * *",
         "description": "Custom cron frequency:"
+    },
+    "update-cron-button": {
+        "type": "button",
+        "description": "Update Cron",
+        "callback": "updateCronButtonClick",
+        "tooltip": "Update the cron job these cron setting"
     }
 }

@@ -25,6 +25,8 @@ MyApplet.prototype = {
         
         // Setup the menu
         this.initMenu(orientation);
+        
+        global.log("_init() [END]");
     },
     
     // Sets up this applet's settings
@@ -107,11 +109,22 @@ MyApplet.prototype = {
         return usingCron;
     },
     
+    // Called when the Update Cron button is clicked in settings
+    updateCronButtonClick: function() {
+        this.updateCron();
+    },
+    
+    // Updates the cron job, if it is running
+    updateCron: function() {
+        Util.spawnCommandLine(AppletDir + '/bin/rwall cron-update');
+    },
+    
     // Toggles the cron job off/on
     toggleCron: function() {
         Util.spawnCommandLine(AppletDir + '/bin/rwall cron-toggle');
     },
     
+    // Runs rwall
     runRwall: function() {
         Util.spawnCommandLine(AppletDir + '/bin/rwall');
     },
