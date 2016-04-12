@@ -1,0 +1,28 @@
+{
+    "head": {
+        "type": "header",
+        "description": "Query Parameters"
+    },
+    "query-string": {
+        "type": "entry",
+        "default": "space",
+        "description": "Word(s) to use when searching for wallpapers:"
+    },
+    "resolution-string": {
+        "type": "entry",
+        "default": "1920x1080",
+        "description": "The resolution of the wallpaper:"
+    },
+    "div1": {
+        "type": "separator"
+    },
+    "head1": {
+        "type": "header",
+        "description": "Cron Settings"
+    },
+    "cron-frequency-string": {
+        "type": "entry",
+        "default": "0,30 * * * *",
+        "description": "Custom cron frequency:"
+    }
+}

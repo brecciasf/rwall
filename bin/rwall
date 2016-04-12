@@ -3,11 +3,11 @@
 # Get the rwall root directory
 rwall_root_directory="$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))"
 
-# This is the line that will be placed in or removed from the crontab
-cronEntry="0,30 * * * * DISPLAY=:0.0 $rwall_root_directory/bin/rwall"
+# Navigate to the rwall root directory
+cd $rwall_root_directory
 
 # Toggles the rwall cron job in crontab
-if [[ $1 == "toggle-cron" ]];
+if [[ $1 == "cron-toggle" ]];
 then
     # Check if rwall is already installed in crontab
     crontabGrepRwall="$(crontab -l | grep 'rwall')"
@@ -15,22 +15,55 @@ then
     # If the string is empty, then rwall is not in crontab
     if [[ $crontabGrepRwall == "" ]];
     then
+        # Get the cron frequency value
+        cronFrequency="$(grep cron-frequency= etc/rwall.ini | cut -f2- -d '=')"
+        
+        # The line to be inserted into the crontab
+        cronEntry="$cronFrequency DISPLAY=:0.0 $rwall_root_directory/bin/rwall"
+    
         # Add the cron entry
         (crontab -l; echo "$cronEntry") | crontab -
         
-        # Remove the lock file
+        # Create the lock file
         touch $rwall_root_directory/etc/USING-CRON.lock
     else
-        # Remove the cron entry, but first change the cron entry string to replace all '*' with '\*' for sed to work
-        crontab -l | sed "\|${cronEntry//[*]/\\*}|d" | crontab -
+        # Remove the cron entry
+        crontab -l | sed "\|$rwall_root_directory/bin/rwall$|d" | crontab -
         rm $rwall_root_directory/etc/USING-CRON.lock
     fi
     
+    # Exit the script
     exit
 fi
 
-# Navigate to the rwall root directory
-cd $rwall_root_directory
+# Updates the settings file
+if [[ $1 == "settings" ]];
+then
+    # Store the variables for readability
+    queryString=$2 # The word(s) to use for the query
+    resolution=$3 # The resolution
+    cronFrequency=$4 # The format of this parameter will be like the beginning of a cron job (ex: "0,30 * * * *")
+    
+    # The ini file
+    iniFile=$rwall_root_directory/etc/rwall.ini
+    
+    # Delete the current settings file
+    rm $iniFile
+    
+    # Create the new settings file
+    echo -e "[query]\nq=$queryString\nres=$resolution\n[cron]\ncron-frequency=$cronFrequency" >> $iniFile
+    
+    # If the USING-CRON.lock file exists, then we should toggle off, then toggle on
+    # in case there were any settings changed to the cron frequency
+    if [[ -e $rwall_root_directory/etc/USING-CRON.lock ]];
+    then
+        $($rwall_root_directory/bin/rwall cron-toggle)
+        $($rwall_root_directory/bin/rwall cron-toggle)
+    fi
+    
+    # Exit the script
+    exit
+fi
 
 # Create the tmp directory if it doesn't already exist
 mkdir -p tmp
