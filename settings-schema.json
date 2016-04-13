@@ -1,7 +1,7 @@
 {
-    "head": {
+    "head2": {
         "type": "header",
-        "description": "Query Parameters"
+        "description": "Random Wallpaper Settings"
     },
     "query-string": {
         "type": "entry",
@@ -13,9 +13,22 @@
         "default": "1920x1080",
         "description": "The resolution of the wallpaper:"
     },
+    "cron-frequency-string": {
+        "type": "entry",
+        "default": "0,30 * * * *",
+        "description": "Change Frequency (cron syntax):"
+    },
+    "update-cron-button": {
+        "type": "button",
+        "description": "Update Cron (click here if you modified the Change Frequency)",
+        "callback": "updateCronButtonClick",
+        "tooltip": "Update the cron job with these settings"
+    },
+    
     "div1": {
         "type": "separator"
     },
+    
     "head1": {
         "type": "header",
         "description": "Wallpaper Saving"
@@ -24,23 +37,5 @@
         "type": "entry",
         "default": "~/Pictures/rwall/",
         "description": "The location to save wallpapers to when the \"Save Wallpaper\" button is clicked:"
-    },
-    "div2": {
-        "type": "separator"
-    },
-    "head2": {
-        "type": "header",
-        "description": "Cron Settings"
-    },
-    "cron-frequency-string": {
-        "type": "entry",
-        "default": "0,30 * * * *",
-        "description": "Cron frequency:"
-    },
-    "update-cron-button": {
-        "type": "button",
-        "description": "Update Cron",
-        "callback": "updateCronButtonClick",
-        "tooltip": "Update the cron job these cron setting"
     }
 }
