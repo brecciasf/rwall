@@ -15,7 +15,7 @@
     },
     "cron-frequency-string": {
         "type": "entry",
-        "default": "0,30 * * * *",
+        "default": "0 * * * *",
         "description": "Change Frequency (cron syntax):"
     },
     "update-cron-button": {
