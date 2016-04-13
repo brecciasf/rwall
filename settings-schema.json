@@ -23,7 +23,7 @@
     "cron-frequency-string": {
         "type": "entry",
         "default": "0,30 * * * *",
-        "description": "Custom cron frequency:"
+        "description": "Cron frequency:"
     },
     "update-cron-button": {
         "type": "button",
