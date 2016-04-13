@@ -6,6 +6,7 @@ The only testing I've done with this program has been on Linux Mint 17.3 (Cinnam
 
 ## Installation
 Download here: https://cinnamon-spices.linuxmint.com/applets/view/250
+
 Extract the ZIP and move the extracted directory to `~/.local/share/cinnamon/applets/`
 
 Alternatively, you may clone this repository into your applets directory by doing the following
