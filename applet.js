@@ -25,8 +25,6 @@ MyApplet.prototype = {
         
         // Setup the menu
         this.initMenu(orientation);
-        
-        global.log("_init() [END]");
     },
     
     // Sets up this applet's settings
@@ -44,6 +42,13 @@ MyApplet.prototype = {
             Settings.BindingDirection.IN,
             "resolution-string",
             "resolutionString",
+            this.onSettingsChange,
+            null);
+            
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "wallpaper-save-directory",
+            "wallpaperSaveDirectory",
             this.onSettingsChange,
             null);
             
@@ -72,16 +77,19 @@ MyApplet.prototype = {
         this.menuManager.addMenu(this.menu);
         
         // Create the "Use Cron" menu item
-        this.useCronMenuItem = new PopupMenu.PopupSwitchMenuItem("Use Cron", this.isCronBeingUsed());
+        this.useCronMenuItem = new PopupMenu.PopupSwitchMenuItem(_("Use Cron"), this.isCronBeingUsed());
         this.useCronMenuItem.connect('toggled', Lang.bind(this, this.toggleCron));
         this.menu.addMenuItem(this.useCronMenuItem);
         
         // Create the "Next Wallpaper" menu item
         let nextWallpaperMenuItem = new PopupMenu.PopupMenuItem(_('Next Wallpaper'));
         nextWallpaperMenuItem.connect('activate', Lang.bind(this, this.runRwall));
-        
-        // Add the item to the menu
         this.menu.addMenuItem(nextWallpaperMenuItem);
+        
+        // Create the "Save Wallpaper" menu item
+        let saveWallpaperMenuItem = new PopupMenu.PopupMenuItem(_('Save Wallpaper'));
+        saveWallpaperMenuItem.connect('activate', Lang.bind(this, this.saveWallpaper));
+        this.menu.addMenuItem(saveWallpaperMenuItem);
     },
     
     onSettingsChange: function() {
@@ -90,6 +98,7 @@ MyApplet.prototype = {
             AppletDir + '/bin/rwall settings ' +
             '"' + this.queryString + '" ' +
             '"' + this.resolutionString + '" ' +
+            '"' + this.wallpaperSaveDirectory + '" ' +
             '"' + this.cronFrequencyString + '"'
         );
     },
@@ -107,6 +116,11 @@ MyApplet.prototype = {
         }
         
         return usingCron;
+    },
+    
+    // Called when the Save Wallpaper button is clicked
+    saveWallpaper: function() {
+        Util.spawnCommandLine(AppletDir + '/bin/rwall save-wallpaper');
     },
     
     // Called when the Update Cron button is clicked in settings

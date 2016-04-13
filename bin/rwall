@@ -39,6 +39,8 @@ fi
 # Updates the cron job, if it is running
 if [[ $1 == "cron-update" ]];
 then
+    # If it is running, toggle it off, then back on again
+    # in order to pick up the new cron settings
     if [[ -e $rwall_root_directory/etc/USING-CRON.lock ]];
     then
         $($rwall_root_directory/bin/rwall cron-toggle)
@@ -53,9 +55,10 @@ fi
 if [[ $1 == "settings" ]];
 then
     # Store the variables for readability
-    queryString=$2 # The word(s) to use for the query
-    resolution=$3 # The resolution
-    cronFrequency=$4 # The format of this parameter will be like the beginning of a cron job (ex: "0,30 * * * *")
+    queryString=$2              # The word(s) to use for the query
+    resolution=$3               # The resolution
+    wallpaperSaveDirectory=$4   # The directory to save wallpapers
+    cronFrequency=$5            # The format of this parameter will be like the beginning of a cron job (ex: "0,30 * * * *")
     
     # The ini file
     iniFile=$rwall_root_directory/etc/rwall.ini
@@ -64,11 +67,40 @@ then
     rm $iniFile
     
     # Create the new settings file
-    echo -e "[query]\nq=$queryString\nres=$resolution\n[cron]\ncron-frequency=$cronFrequency" >> $iniFile
+    echo -e "[query]\nq=$queryString\nres=$resolution\n[other]\nwallpaper-save-directory=$wallpaperSaveDirectory\n[cron]\ncron-frequency=$cronFrequency" >> $iniFile
     
     # Exit the script
     exit
 fi
+
+# Saves the current wallpaper to ~/Pictures/rwall
+if [[ $1 == "save-wallpaper" ]];
+then
+    # The directory to save the wallpapers
+    wallpaperSaveDirectory=$(grep wallpaper-save-directory= etc/rwall.ini | cut -f2- -d '=')
+    wallpaperSaveDirectoryExpanded="${wallpaperSaveDirectory/#\~/$HOME}"
+
+    # Make sure the save directory exists
+    mkdir -p $wallpaperSaveDirectoryExpanded
+
+    # If a PNG file exists, then copy that one
+    if [ -e tmp/*.png ];
+    then
+        cp tmp/*.png $wallpaperSaveDirectoryExpanded
+    else
+        # Else, we're copying the JPG file
+        cp tmp/*.jpg $wallpaperSaveDirectoryExpanded
+    fi
+    
+    # Exit the script
+    exit
+fi
+
+
+
+# From this point on, the normal rwall process is running
+
+
 
 # Create the tmp directory if it doesn't already exist
 mkdir -p tmp

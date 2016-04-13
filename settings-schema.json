@@ -18,6 +18,18 @@
     },
     "head1": {
         "type": "header",
+        "description": "Wallpaper Saving"
+    },
+    "wallpaper-save-directory": {
+        "type": "entry",
+        "default": "~/Pictures/rwall/",
+        "description": "The location to save wallpapers to when the \"Save Wallpaper\" button is clicked:"
+    },
+    "div2": {
+        "type": "separator"
+    },
+    "head2": {
+        "type": "header",
         "description": "Cron Settings"
     },
     "cron-frequency-string": {
