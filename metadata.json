@@ -1,6 +1,6 @@
 {
-    "uuid": "rwall",
+    "uuid": "rwall@typicalfoobar",
     "name": "rwall",
-    "description": "Interact with rwall",
+    "description": "Random Wallpaper Changer",
     "max-instances": -1
 }

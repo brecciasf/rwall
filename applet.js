@@ -3,7 +3,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 const Cinnamon = imports.gi.Cinnamon;
-const AppletDir = imports.ui.appletManager.appletMeta["rwall"].path;
+const AppletDir = imports.ui.appletManager.appletMeta["rwall@typicalfoobar"].path;
 const Settings = imports.ui.settings;
 
 function MyApplet(orientation, panel_height, instance_id) {
@@ -18,7 +18,7 @@ MyApplet.prototype = {
 
         // Set the icon and tooltip of this applet
         this.set_applet_icon_path(AppletDir + '/icon.png');
-        this.set_applet_tooltip(_('Interact with rwall'));
+        this.set_applet_tooltip(_('rwall'));
         
         // Setup this applet's settings
         this.initSettings(instance_id);
@@ -29,7 +29,7 @@ MyApplet.prototype = {
     
     // Sets up this applet's settings
     initSettings: function(instance_id) {
-        this.settings = new Settings.AppletSettings(this, "rwall", instance_id);
+        this.settings = new Settings.AppletSettings(this, "rwall@typicalfoobar", instance_id);
         
         this.settings.bindProperty(
             Settings.BindingDirection.IN,       // The binding direction - IN means we only listen for changes from this applet
