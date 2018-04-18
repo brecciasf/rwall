@@ -13,7 +13,8 @@ Alternatively, you may clone this repository into your applets directory by doin
 
 ```
 cd ~/.local/share/cinnamon/applets
-git clone https://github.com/TypicalFooBar/rwall.git rwall@typicalfoobar
+git clone https://github.com/brecciasf/rwall.git rwall@typicalfoobar
+
 ```
 
 Modifications to the original code:
