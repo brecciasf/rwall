@@ -5,6 +5,15 @@ const Lang = imports.lang;
 const Cinnamon = imports.gi.Cinnamon;
 const AppletDir = imports.ui.appletManager.appletMeta["rwall@typicalfoobar"].path;
 const Settings = imports.ui.settings;
+const GLib = imports.gi.GLib;
+const Gettext = imports.gettext;
+const UUID = "rwall@typicalfoobar";
+
+Gettext.bindtextdomain(UUID, GLib.get_home_dir() + "/.local/share/locale")
+
+function _(str) {
+  return Gettext.dgettext(UUID, str);
+}
 
 function MyApplet(orientation, panel_height, instance_id) {
     this._init(orientation, panel_height, instance_id);
@@ -18,7 +27,7 @@ MyApplet.prototype = {
 
         // Set the icon and tooltip of this applet
         this.set_applet_icon_path(AppletDir + '/icon.png');
-        this.set_applet_tooltip(_('rwall'));
+        this.set_applet_tooltip(_('rwall plus'));
         
         // Setup this applet's settings
         this.initSettings(instance_id);
@@ -59,6 +68,64 @@ MyApplet.prototype = {
             this.onSettingsChange,
             null);
             
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "purity-string",
+            "purityString",
+            this.onSettingsChange,
+            null);
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "nik-bot-nu-query",
+            "nik_bot_nu_query",
+            this.onSettingsChange,
+            null);
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "nik-bot-nu-purity",
+            "nik_bot_nu_purity",
+            this.onSettingsChange,
+            null);
+
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "adultwalls-com-purity",
+            "adultwalls_com_purity",
+            this.onSettingsChange,
+            null);
+
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "wallpaper-exec",
+            "wallpaper_exec",
+            this.onSettingsChange,
+            null);
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "username",
+            "usernameString",
+            this.onSettingsChange,
+            null);
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "password",
+            "passwordString",
+            this.onSettingsChange,
+            null);
+
+        this.settings.bindProperty(
+            Settings.BindingDirection.IN,
+            "rwall-source",
+            "rwall_source",
+            this.onSettingsChange,
+            null);
+
         // Start the application with the initial values
         this.onSettingsChange();
     },
@@ -82,14 +149,42 @@ MyApplet.prototype = {
         this.menu.addMenuItem(this.useCronMenuItem);
         
         // Create the "Next Wallpaper" menu item
-        let nextWallpaperMenuItem = new PopupMenu.PopupMenuItem(_('Next Wallpaper'));
+        let nextWallpaperMenuItem = new PopupMenu.PopupMenuItem(_("Next Wallpaper"));
         nextWallpaperMenuItem.connect('activate', Lang.bind(this, this.runRwall));
         this.menu.addMenuItem(nextWallpaperMenuItem);
         
         // Create the "Save Wallpaper" menu item
-        let saveWallpaperMenuItem = new PopupMenu.PopupMenuItem(_('Save Wallpaper'));
+        let saveWallpaperMenuItem = new PopupMenu.PopupMenuItem(_("Save Wallpaper"));
         saveWallpaperMenuItem.connect('activate', Lang.bind(this, this.saveWallpaper));
         this.menu.addMenuItem(saveWallpaperMenuItem);
+
+        // Create the "Rwall Login"
+        let rwallLoginMenuItem = new PopupMenu.PopupMenuItem(_("Wallhaven.cc Login"));
+        rwallLoginMenuItem.connect('activate', Lang.bind(this, this.rwallLogin));
+        this.menu.addMenuItem(rwallLoginMenuItem);
+            
+        // Create the "Update Cache (nik.bot.nu)"
+        let updateCacheMenuItem = new PopupMenu.PopupMenuItem(_("Update Cache"));
+        updateCacheMenuItem.connect('activate', Lang.bind(this, this.updateCache));
+        this.menu.addMenuItem(updateCacheMenuItem);
+
+        // Reset Page Sub menu.
+        let resetPageMenuItem = new PopupMenu.PopupSubMenuMenuItem(_("Reset Page Num"));
+        let resetPageRwallMenuItem = new PopupMenu.PopupMenuItem(_("Reset Rwall"));
+        resetPageRwallMenuItem.connect('activate', Lang.bind(this,this.resetRwallPage));
+        let resetPageNikMenuItem = new PopupMenu.PopupMenuItem(_("Reset Nik.bot.nu"));
+        resetPageNikMenuItem.connect('activate', Lang.bind(this,this.resetNikPage));
+        let resetPageAdultWMenuItem = new PopupMenu.PopupMenuItem(_("Reset Adultwalls.com"));
+        resetPageAdultWMenuItem.connect('activate', Lang.bind(this,this.resetAdultWPage));
+        let resetPageSexNudMenuItem = new PopupMenu.PopupMenuItem(_("Reset Sexydesktopnudes.com"));
+        resetPageSexNudMenuItem.connect('activate', Lang.bind(this,this.resetSexNudPage));
+        resetPageMenuItem.menu.addMenuItem(resetPageRwallMenuItem)
+        resetPageMenuItem.menu.addMenuItem(resetPageNikMenuItem)
+        resetPageMenuItem.menu.addMenuItem(resetPageAdultWMenuItem)
+        resetPageMenuItem.menu.addMenuItem(resetPageSexNudMenuItem)
+
+        this.menu.addMenuItem(resetPageMenuItem)
+
     },
     
     onSettingsChange: function() {
@@ -99,7 +194,15 @@ MyApplet.prototype = {
             '"' + this.queryString + '" ' +
             '"' + this.resolutionString + '" ' +
             '"' + this.wallpaperSaveDirectory + '" ' +
-            '"' + this.cronFrequencyString + '"'
+            '"' + this.purityString + '" ' +
+            '"' + this.cronFrequencyString + '" '  +
+            '"' + this.nik_bot_nu_query + '" ' +
+            '"' + this.nik_bot_nu_purity + '" ' +
+            '"' + this.wallpaper_exec + '" ' +
+            '"' + this.usernameString + '" ' +
+            '"' + this.passwordString + '" ' +
+            '"' + this.rwall_source + '" ' +
+            '"' + this.adultwalls_com_purity + '" '
         );
     },
     
@@ -140,7 +243,7 @@ MyApplet.prototype = {
     
     // Runs rwall
     runRwall: function() {
-        Util.spawnCommandLine(AppletDir + '/bin/rwall');
+        Util.spawnCommandLine(AppletDir + '/bin/rwall nextimg');
     },
 
     on_applet_clicked: function() {
@@ -148,6 +251,44 @@ MyApplet.prototype = {
         this.useCronMenuItem.setToggleState(this.isCronBeingUsed());
         
         this.menu.toggle();
+    },
+    // login to alpha.wallhaven.cc to get racy content
+    rwallLogin: function () {
+                Util.spawnCommandLine(AppletDir + '/bin/rwall login');
+    },
+    //update cache
+    updateCache: function(){
+            if (this.wallpaper_exec === "rwall") {
+                    Util.spawnCommandLine(AppletDir + '/bin/rwall update');
+
+            } else if (this.wallpaper_exec ===  "nik.bot.nu") {
+                    Util.spawnCommandLine(AppletDir + '/bin/nik.bot.nu update');
+
+            } else if (this.wallpaper_exec ===  "sexydesktopnudes.com") {
+                    Util.spawnCommandLine(AppletDir + '/bin/sexydesktopnudes.com update');
+
+            } else if (this.wallpaper_exec ===  "adultwalls.com") {
+                    Util.spawnCommandLine(AppletDir + '/bin/adultwalls.com update');
+
+            } else {
+                    // If 'Random' then update all of them.
+                    Util.spawnCommandLine(AppletDir + '/bin/rwall update');
+                    Util.spawnCommandLine(AppletDir + '/bin/nik.bot.nu update');
+                    Util.spawnCommandLine(AppletDir + '/bin/sexydesktopnudes.com update');
+                    Util.spawnCommandLine(AppletDir + '/bin/adultwalls.com update');
+            }
+    },
+    resetRwallPage: function () {
+            Util.spawnCommandLine(AppletDir + '/bin/rwall reset-page');
+    },
+    resetNikPage: function () {
+             Util.spawnCommandLine(AppletDir + '/bin/nik.bot.nu reset-page');
+    },
+    resetAdultWPage: function () {
+             Util.spawnCommandLine(AppletDir + '/bin/adultwalls.com reset-page');
+    },
+    resetSexNudPage: function() {
+                    Util.spawnCommandLine(AppletDir + '/bin/sexydesktopnudes.com reset-page');
     }
 };
 
