@@ -1,0 +1,150 @@
+# Const
+IMAGE_LOCK=tmp/_download_in_progress
+
+# Make this call at the very top of your module.
+function initialize {
+        # Create the tmp directory if it doesn't already exist
+        mkdir -p tmp
+
+        # Create the logs directory if it doesn't already exist
+        mkdir -p logs
+}        
+
+# Used in trap functions inside doFetchImage
+function onExitFetchImage {
+        # Remove fetch image lock files 
+        rm "$IMAGE_LOCK" 1>/dev/null 2>&1
+}
+
+
+#param1 = datafile
+function getNextPageNo {
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    local nextPageNo=$(tail -1 $1 | cut -d# -f2)
+
+    # if you get gibberish then set the default value.
+    re='^[0-9]+$'
+    if ! [[ $nextPageNo =~ $re ]]; then
+            nextPageNo=1
+    fi
+    echo $nextPageNo
+    return 0
+}
+
+#param1 = datafile
+#param1 = new value for page no
+function setNextPageNo {
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    local val=${2:-1}
+
+    lastline=$(tail -1 $1)
+    lineno=$(echo $lastline | cut -d# -f1)
+    restOfLine=$(echo $lastline | cut -d# -f3-)
+
+    # delete last line
+    sed -i '$d' $1
+    echo "${lineno}#${val}#${restOfLine}" >> $1
+
+    return 0
+}
+
+function getTotalImageCount {
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    local count=$( wc -l <$1 )
+    # last line is for config.
+    count=$(( $count -1 ))
+        
+    echo $count
+    return 0
+}
+
+# Returns the line num 
+function getImageCounter {
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    imageno=$(tail -1 $1 | cut -d# -f1)
+    echo $imageno
+    return 0
+}
+
+
+# Returns the data on line ??
+function getCurrentImageData {
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    lineno=$( getImageCounter $1 )
+    data=$( sed -n "${lineno}p" $1)
+    echo $data
+    return 0
+}
+
+# increments the image counter [param1]
+function incrementImageCounter {
+    imagecounter=$( getImageCounter $1 )
+    # inc imagecounter
+    imagecounter=$(( $imagecounter +1 ))
+    setImageCounter $1 $imagecounter
+}
+
+# param1 = <datafile>
+# param2 = [set value]
+function setImageCounter {
+    # param1 is mandatory datafile.
+    if [[ -z "$1" && -f "$1" ]]; then
+            echo "Error I need a data file to work with"
+            return -1
+    fi
+    #param2 'new counter value'
+    local imagecounter=${2:-1}
+
+    local lastline=$(tail -1 $1)
+    local restOfLine=$(echo $lastline | cut -d# -f2-)
+    # delete last line
+    sed -i '$d' $1
+    # append last line.
+    echo "${imagecounter}#${restOfLine}" >> $1
+    return 0
+
+}
+
+#reset the line number 
+function resetImageCounter {
+  # append a 'fake' line it will get deleted.
+  echo "xxx" >> $1
+  setImageCounter $1 1
+}
+
+# verify that the last line contains 1 or more '#' chars
+# and that the file contains more that 1 line.
+function isValidDataFile {
+  # param1 is mandatory datafile.
+  if [[ -z "$1" && -f "$1" ]]; then
+          echo "Error I need a data file to work with"
+          return -1
+  fi
+
+  local num_of_lines=$(cat $1 | wc -l)
+  if (( num_of_lines > 1 )); then
+      local last_line_=$(tail -1 $1| grep -o '#')
+      if [ -z "$last_line_" ]; then 
+              return 1 
+      else 
+              return 0
+      fi
+  else 
+          return 1
+  fi
+}

@@ -6,20 +6,378 @@ rwall_root_directory="$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd
 # Navigate to the rwall root directory
 cd $rwall_root_directory
 
+service=rwall
+datafile=${service}-data
+cookiesfile=${service}-cookies
+
+# Load common functionality and initialize
+source bin/rwall-shared
+initialize
+
+
+
+function configParams {
+        local query=$1
+        retval=$(sed  -n -E "s@${query}=[ \t]*(.*)[ \t]*\$@\1@p" etc/rwall.ini | awk '{$1=$1};1' )
+        echo "$retval"
+}
+
+function isProvider {
+        sprov=$(configParams 'wallpaper-exec')
+        if [ -z "$1" ]; then
+                echo "need a rwall source/service provider"
+                return -1
+        fi
+
+        if [[ -n "$sprov" && "$sprov" == "$1" ]]; then
+                echo "true"
+                return 0
+        fi
+
+        echo "false"
+        return 1
+}
+
+
+function selectRandomProvider {
+        local max_providers=4 # TODO: fix this should be '4' 
+        # find a random number between 1 and "max providers"
+        providerIdx=$(( RANDOM%$max_providers+1 ))
+
+        case $providerIdx in
+                1) 
+                        echo "rwall"
+                        doFetchImage
+                        ;;
+                2)
+                        echo "nik.bot.nu"
+                        bin/nik.bot.nu nextimg
+                        ;;
+                3)      
+                        echo "sexydesktopnudes.com"
+                        bin/sexydesktopnudes.com nextimg
+                        ;;
+
+                4)
+                        echo "adultwalls.com"
+                        bin/adultwalls.com nextimg
+                        ;;
+                # Add more here.
+                *)
+                        echo "rwall"
+                        doFetchImage
+                        ;;
+        esac
+
+        return 0
+}
+
+
+
+function doFetchSearchPage {
+    local page=${1:-1}
+
+    # Read the ini file for parameters
+    q=$( configParams 'q')
+    res=$( configParams 'res')
+    pu=$( configParams 'purity-string')
+
+    # Override resolution settings
+    # Disable resolution filter.
+    res=''
+
+    curl --fail -X GET --compressed \
+            --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile  \
+            -H 'Host: alpha.wallhaven.cc' \
+            -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0' \
+            -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+            -H 'Accept-Language: en-US,en;q=0.5' \
+            -H 'Referer: https://alpha.wallhaven.cc/untagged' \
+            -H 'DNT: 1' \
+            -H 'Connection: keep-alive' \
+            -H 'Upgrade-Insecure-Requests: 1' \
+            -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' \
+            "https://alpha.wallhaven.cc/search?q=$q&categories=111&purity=$pu&resolutions=$res&sorting=random&order=asc" \
+           | grep -oh -E 'data-wallpaper-id="[0-9]+"' | sed -n -E 's#data-wallpaper-id="([0-9]+)"#\1#p' >> "tmp/$datafile"
+
+}
+
+function doFetchUntaggedPage {
+    local page=${1:-1}
+
+    curl --fail -S -X GET --compressed \
+            --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile \
+            -H 'Host: alpha.wallhaven.cc' \
+            -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0' \
+            -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+            -H 'Accept-Language: en-US,en;q=0.5' \
+            -H 'Referer: https://alpha.wallhaven.cc/untagged' \
+            -H 'DNT: 1' \
+            -H 'Connection: keep-alive' \
+            -H 'Upgrade-Insecure-Requests: 1' \
+            -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' \
+           "https://alpha.wallhaven.cc/untagged?page=$page&purity=$pu" \
+           | grep -oh -E 'data-wallpaper-id="[0-9]+"' | sed -n -E 's#data-wallpaper-id="([0-9]+)"#\1#p' >> "tmp/$datafile"
+
+}
+
+function doFetchTopPage {
+    local page=${1:-1}
+
+    # Read the ini file for parameters
+    q=$( configParams 'q')
+    res=$( configParams 'res')
+    pu=$( configParams 'purity-string')
+  
+    curl --fail -X GET --compressed \
+            --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile \
+            -H 'Host: alpha.wallhaven.cc' \
+            -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0' \
+            -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+            -H 'Accept-Language: en-US,en;q=0.5' \
+            -H 'Referer: https://alpha.wallhaven.cc/toplist' \
+            -H 'DNT: 1' \
+            -H 'Connection: keep-alive' \
+            -H 'Upgrade-Insecure-Requests: 1' \
+            -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' \
+            "https://alpha.wallhaven.cc/search?q=&categories=111&purity=$pu&topRange=1y&sorting=toplist&order=desc&page=$page" \
+           | grep -oh -E 'data-wallpaper-id="[0-9]+"' | sed -n -E 's#data-wallpaper-id="([0-9]+)"#\1#p' >> "tmp/$datafile"
+
+}
+
+function doFetchLatestPage {
+    local page=${1:-1}
+
+    # Read the ini file for parameters
+    q=$( configParams 'q')
+    res=$( configParams 'res')
+    pu=$( configParams 'purity-string')
+
+    curl -S -X GET --compressed \
+            --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile \
+              -H 'Host: alpha.wallhaven.cc' \
+              -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0' \
+              -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+              -H 'Accept-Language: en-US,en;q=0.5' \
+              -H 'Referer: https://alpha.wallhaven.cc/latest' \
+              -H 'DNT: 1' \
+              -H 'Connection: keep-alive' \
+              -H 'Upgrade-Insecure-Requests: 1' \
+              -H 'Pragma: no-cache' \
+              -H 'Cache-Control: no-cache' \
+            "https://alpha.wallhaven.cc/search?q=&categories=111&purity=$pu&sorting=date_added&order=desc&page=$page" \
+           | grep -oh -E 'data-wallpaper-id="[0-9]+"' | sed -n -E 's#data-wallpaper-id="([0-9]+)"#\1#p' >> "tmp/$datafile"
+}
+
+# verify that the session is not too old
+# atm set at 1hr.
+function verifyLoggedIn {
+    lastModTS=$(stat -c %Y tmp/$cookiesfile)
+    now=$(date +'%s')
+    # assume session timeout of 1hr. TODO: fix this
+    session_timeout=$(( 1 * 60 * 60))
+    diff=$(( $now - $lastModTS))
+    if [[ $diff -gt $session_timeout ]]; then
+            echo "Auto logging in as session (possibly) expired"
+            bin/rwall login
+    fi
+}
+
+function onExitUpdate {
+        # Remove update lock files 
+        rm "tmp/${service}-data.lck" 1>/dev/null 2>&1
+}
+
+#param1= rwall source : untagged, search, top page etc..
+#param2=num of pages to fetch.
+function doUpdate {
+    # If lock file exits do not continue.
+    if [ -f "tmp/${service}-data.lck" ]; then
+            echo "There is already another update process running."
+            return -1
+    else 
+            # otherwise create the lock file.
+            touch "tmp/${service}-data.lck"
+            # on exit delete lockfile
+            trap onExitUpdate ERR EXIT
+    fi
+
+    verifyLoggedIn
+        
+    local rwall_src=${1:-"search"};
+    local pages=${2:-2}
+    local start_page=$(getNextPageNo "tmp/$datafile")
+    local end_page=$(( $start_page +$pages ))
+
+
+    echo "Using $rwall_src as source"
+    echo "Updating pages $start_page to $end_page"
+
+    # Truncate datafile
+    truncate -s 0 "tmp/$datafile"
+
+    if [[ "$rwall_src" == "search" ]]; then
+        for (( a=$start_page; a<$end_page; a++ )) do
+          doFetchSearchPage
+          sleep 3 # Be nice :)
+        done
+    fi
+        
+    if [[ "$rwall_src" == "untagged" ]]; then
+        for (( a=$start_page; a<$end_page; a++ )) do
+         doFetchUntaggedPage $a
+         sleep 3 # Be nice :)
+        done
+    fi
+
+    if [[ "$rwall_src" == "top" ]]; then
+        for (( a=$start_page; a<$end_page; a++ )) do
+          doFetchTopPage $a
+          sleep 3 # Be nice :)
+        done
+    fi
+
+    if [[ "$rwall_src" == "latest" ]]; then
+        for (( a=$start_page; a<$end_page; a++ )) do
+          doFetchLatestPage $a
+          sleep 3 # Be nice :)
+        done
+    fi
+
+    # sort and remove duplicates (creates a temporary file) 
+    # sort is necessary otherwise 'uniq' will not work.
+    # can we use a pipe instead ??
+    local tmp=$(mktemp  --tmpdir="tmp/" ${datafile}-XXXXXXXX)
+    #echo "Before Removing Duplicates count: $(wc -l tmp/$datafile)"
+    sort -n "tmp/$datafile" | uniq > "$tmp" && \
+            /usr/bin/mv "$tmp" "tmp/$datafile"
+    #echo "After Removing Duplicates count: $(wc -l tmp/$datafile)"
+
+
+    # Reset next image counter and appends page/imagecount and whatever else u need.
+    resetImageCounter "tmp/$datafile"
+    # Cannot call before "reset"
+    setNextPageNo "tmp/$datafile" $end_page
+}
+
+function doFetchImage {
+
+        if [ ! -s "tmp/$datafile" ]; then
+                # Update the cache as we have no data file.
+                echo "Please wait a moment while i quickly get some data"
+                bin/rwall update fast
+        fi
+
+        # If lock file exits do not continue.
+        if [ -f "$IMAGE_LOCK" ]; then
+            echo "There is already another process running."
+            return -1
+        else 
+            # otherwise create the lock file.
+            touch "$IMAGE_LOCK"
+            trap onExitFetchImage ERR EXIT
+        fi
+
+        isValidDataFile "tmp/$datafile"
+        local retval=$?
+        if [ "$retval" -ne 0 ]; then
+                echo "The data file is not in a valid format"
+                echo "This may mean you may need to change/expand your search terms and/or purity"
+                echo "or need to execute 'reset-page' for that datafile"
+                echo "eg. $0 reset-page"
+                return -1
+        fi
+        
+        verifyLoggedIn
+
+        totalimgs=$(getTotalImageCount "tmp/$datafile")
+        echo "Total num of images : $totalimgs"
+
+        currentimg=$(getImageCounter "tmp/$datafile")
+        echo "Current img : $currentimg"
+
+        # If we reach the end ...start from beginning
+        # Auto-Update the cache in the process.
+        if (( currentimg > totalimgs )); then
+                # update the cache as we have run out of images.
+                bin/rwall update
+                currentimg=1
+        fi
+
+        id=$(getCurrentImageData "tmp/$datafile")
+        echo "Image ID :$id"
+
+        if [ -n "$id" ]; then
+
+                # Below is the ORIGINAL CODE TAKEN FROM RWALL
+                # Some variables to help us know if we found the image and what file type it is
+                image_found=1
+                file_type=""
+
+                # JPG
+                if [ $image_found -eq 1 ];
+                then
+                    local result=$(curl -S -s --fail --compressed --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile  -o tmp/wallpaper.tmp.jpg https://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.jpg)
+                    if [ $? -eq 0 ]
+                    then
+                        image_found=0
+                        file_type="jpg"
+                    fi
+                fi
+
+                # PNG
+                if [ $image_found -eq 1 ];
+                then
+                    local result=$(curl -S -s --fail --compressed --cookie-jar tmp/$cookiesfile --cookie tmp/$cookiesfile  -o tmp/wallpaper.tmp.png https://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.png)
+                    if [ $? -eq 0 ]
+                    then
+                        image_found=0
+                        file_type="png"
+                    fi
+                fi
+
+                # Set $DBUS_SESSION_BUS_ADDRESS enviroment variable if it is not set
+                if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]
+                then
+                    PID=$(pidof "cinnamon-session")
+                    export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
+                fi
+
+                # Change the wallpaper
+                gsettings set org.gnome.desktop.background picture-uri "file://$rwall_root_directory/tmp/wallpaper.tmp.$file_type" &
+                gsettings set org.gnome.desktop.background picture-options zoom &
+                
+                incrementImageCounter "tmp/$datafile"
+
+                return 0
+        fi
+
+        return -1
+}
+
 # Toggles the rwall cron job in crontab
 if [[ $1 == "cron-toggle" ]];
 then
     # Check if rwall is already installed in crontab
-    crontabGrepRwall="$(crontab -l | grep 'rwall')"
-    
+
+    # handles multiple crontab entries
+    # Get the cron frequency value
+    cronFrequency="$( configParams 'cron-frequency' )"
+    #echo "Cron Freq : $cronFrequency"
+
+    re=".*DISPLAY.*/rwall\\s+nextimg"
+    #echo "RE: $re"
+
+    crontabGrepRwall=$(crontab -l | grep -E "${re}")
+    #echo "crontabGrepRwall  : $crontabGrepRwall"
+
+
     # If the string is empty, then rwall is not in crontab
     if [[ $crontabGrepRwall == "" ]];
     then
-        # Get the cron frequency value
-        cronFrequency="$(grep cron-frequency= etc/rwall.ini | cut -f2- -d '=')"
         
         # The line to be inserted into the crontab
-        cronEntry="$cronFrequency DISPLAY=:0.0 $rwall_root_directory/bin/rwall"
+        cronEntry="$cronFrequency DISPLAY=:0.0 $rwall_root_directory/bin/rwall nextimg"
     
         # Add the cron entry
         (crontab -l; echo "$cronEntry") | crontab -
@@ -27,11 +385,10 @@ then
         # Create the lock file
         touch $rwall_root_directory/etc/USING-CRON.lock
     else
-        # Remove the cron entry
-        crontab -l | sed "\|$rwall_root_directory/bin/rwall$|d" | crontab -
+        crontab -l | grep -vE "${re}" | crontab -
         rm $rwall_root_directory/etc/USING-CRON.lock
     fi
-    
+
     # Exit the script
     exit
 fi
@@ -43,8 +400,8 @@ then
     # in order to pick up the new cron settings
     if [[ -e $rwall_root_directory/etc/USING-CRON.lock ]];
     then
-        $($rwall_root_directory/bin/rwall cron-toggle)
-        $($rwall_root_directory/bin/rwall cron-toggle)
+        bin/rwall cron-toggle
+        bin/rwall cron-toggle
     fi
     
     # Exit the script
@@ -58,16 +415,43 @@ then
     queryString=$2              # The word(s) to use for the query
     resolution=$3               # The resolution
     wallpaperSaveDirectory=$4   # The directory to save wallpapers
-    cronFrequency=$5            # The format of this parameter will be like the beginning of a cron job (ex: "0,30 * * * *")
+    purityString=$5             # How clean you want your images.
+    cronFrequency="$6"          # The format of this parameter will be like the beginning of a cron job (ex: "0,30 * * * *")
+    nik_bot_nu_query=$7         # Query string for the website nik.bot.nu
+    nik_bot_nu_purity=$8        # Cleanliness
+    wallpaper_exec=$9           # Wallpaper Service Provider
+    usernameString=${10}        # Login Username for alpha.wallhaven.cc
+    passwordString=${11}        # Login Password for alpha.wallhaven.cc
+    rwall_source=${12}          # Rwall source eg. untagged , latest, top etc
+    adultwalls_com_purity=${13} # adultwalls.com purity erotic / lingerie
     
     # The ini file
     iniFile=$rwall_root_directory/etc/rwall.ini
     
     # Delete the current settings file
-    rm $iniFile
+    # rm $iniFile
+    # Unnecessary
     
-    # Create the new settings file
-    echo -e "[query]\nq=$queryString\nres=$resolution\n[other]\nwallpaper-save-directory=$wallpaperSaveDirectory\n[cron]\ncron-frequency=$cronFrequency" >> $iniFile
+    cat >$iniFile <<Endofconfig
+    [query]
+    rwall-source=$rwall_source
+    q=$queryString
+    res=$resolution
+    purity-string=$purityString
+    [other]
+    wallpaper-save-directory=$wallpaperSaveDirectory
+    username=$usernameString
+    password=$passwordString
+    [cron]
+    cron-frequency=$cronFrequency
+    [nik.bot.nu]
+    nik-bot-nu-query=$nik_bot_nu_query
+    nik-bot-nu-purity=$nik_bot_nu_purity
+    [adultwalls.com]
+    adultwalls-com-purity=$adultwalls_com_purity
+    [Service Provider]
+    wallpaper-exec=$wallpaper_exec
+Endofconfig
     
     # Exit the script
     exit
@@ -77,81 +461,190 @@ fi
 if [[ $1 == "save-wallpaper" ]];
 then
     # The directory to save the wallpapers
-    wallpaperSaveDirectory=$(grep wallpaper-save-directory= etc/rwall.ini | cut -f2- -d '=')
+    wallpaperSaveDirectory=$( configParams 'wallpaper-save-directory')
     wallpaperSaveDirectoryExpanded="${wallpaperSaveDirectory/#\~/$HOME}"
+
 
     # Make sure the save directory exists
     mkdir -p $wallpaperSaveDirectoryExpanded
 
-    # If a PNG file exists, then copy that one
-    if [ -e tmp/*.png ];
-    then
-        cp tmp/*.png $wallpaperSaveDirectoryExpanded
-    else
-        # Else, we're copying the JPG file
-        cp tmp/*.jpg $wallpaperSaveDirectoryExpanded
-    fi
-    
+                                                                          # remove the 'file://' | remove the \' at start & end
+    background=$(gsettings get org.gnome.desktop.background picture-uri | sed -E 's%file://%%g'  | sed -E "s%'(.*)'%\1%g" )
+    filename=$( basename "$background" )
+    extension="${filename##*.}" 
+    tmp=$(mktemp  --tmpdir="tmp/" rwall-XXXXXXXX.${extension})
+    echo $tmp
+
+    /usr/bin/cp $background $tmp && /usr/bin/mv $tmp $wallpaperSaveDirectoryExpanded
+
     # Exit the script
     exit
 fi
 
+function onExitLogin {
+        # Remove login lock files 
+        rm "bin/rwall-login.lck" 1>/dev/null 2>&1
+        # Clean up index.html
+        rm "bin/index.html" 1>/dev/null 2>&1
+}
 
-
-# From this point on, the normal rwall process is running
-
-
-
-# Create the tmp directory if it doesn't already exist
-mkdir -p tmp
-
-# Remove all files in the rwall/tmp directory
-rm -r tmp/*
-
-# Read the ini file for parameters
-q=$(grep q= etc/rwall.ini | cut -f2- -d '=')
-res=$(grep res= etc/rwall.ini | cut -f2- -d '=')
-
-# Download the html based on our search parameters
-wget "http://alpha.wallhaven.cc/search?q=$q&categories=111&purity=100&resolutions=$res&sorting=random&order=asc" -O tmp/wallhaven.html
-
-# grep the image ID
-#id=$(grep -o -m 1 '<a href="javascript:;" data-id=".*" ' tmp/wallhaven.html | grep -o [0-9].*[0-9])
-id=$(grep -oP 'wallpaper-id="\K[^"]*' tmp/wallhaven.html | head -1)
-
-# Some variables to help us know if we found the image and what file type it is
-image_found=1
-file_type=""
-
-# JPG
-if [ $image_found -eq 1 ];
+#   Logging into alpha.wallhaven.cc ....
+#   You need to have registered with the site to get NSFW images.
+if [[ $1 == "login" ]];
 then
-	wget_image=$(wget http://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.jpg -O tmp/wallpaper-$id.jpg)
-	if [ $? -eq 0 ]
-	then
-		image_found=0
-		file_type="jpg"
-	fi
+	      # If lock file exits do not continue.
+	      if [ -f "bin/rwall-login.lck" ]; then
+	            echo "There is already another login process running."
+	            exit -1
+	      else 
+	            # otherwise create the lock file.
+	            touch "bin/rwall-login.lck"
+                trap onExitLogin EXIT
+	      fi
+	    
+	      truncate -s 0 "tmp/rwall-cookies"
+
+          username=$( configParams 'username')
+          password=$( configParams 'password')
+          if [[ -z "$username" || -z "$password" ]]; then
+                  "Error: Unable to login! username/password not found"
+                  exit -1
+          fi
+
+		  # Get the index for the token.
+          curl  \
+                  --compressed \
+                  --cookie tmp/$cookiesfile --cookie-jar tmp/$cookiesfile \
+                  -o bin/index.html -X GET \
+                  -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+                  -H "Accept-Language: en-US,en;q=0.5" \
+                  -H "Cache-Control: no-cache" \
+                  -H "Connection: keep-alive" \
+                  -H "DNT: 1" \
+                  -H "Host: alpha.wallhaven.cc" \
+                  -H "Pragma: no-cache" \
+                  -H "Referer: https://alpha.wallhaven.cc/" \
+                  -H "Upgrade-Insecure-Requests: 1" \
+                  -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0" \
+                  "https://alpha.wallhaven.cc"
+          sleep 2 # be nice.
+          
+          # Get the 'hidden' token
+          token=$( bin/rwall-login-token.py "bin/index.html" )
+          if [[ -z "$token" ]]; then
+          	echo "Could not find the token."
+          	exit -1
+          fi
+          
+          echo  "Found token : $token"
+
+          
+          # Log in to the 'alpha.wallhaven.cc' server.
+          curl \
+          --location --max-redirs 2 \
+          --post302 \
+          --cookie "tmp/$cookiesfile" --cookie-jar "tmp/$cookiesfile" \
+          -X POST \
+          --data "username=$username&password=$password&_token=$token" \
+          -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+          -H "Accept-Language: en-US,en;q=0.5" \
+          -H "Cache-Control: no-cache" \
+          -H "Connection: keep-alive" \
+          -H "DNT: 1" \
+          -H "Host: alpha.wallhaven.cc" \
+          -H "Pragma: no-cache" \
+          -H "Referer: https://alpha.wallhaven.cc/" \
+          -H "Upgrade-Insecure-Requests: 1" \
+          -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0" \
+          "https://alpha.wallhaven.cc/auth/login"  \
+          1> /dev/null 2>&1
+          
+
+          #Exit the script
+          exit
 fi
 
-# PNG
-if [ $image_found -eq 1 ];
-then
-	wget_image=$(wget http://alpha.wallhaven.cc/wallpapers/full/wallhaven-$id.png -O tmp/wallpaper-$id.png)
-	if [ $? -eq 0 ]
-	then
-		image_found=0
-		file_type="png"
-	fi
+
+
+if [[ "$1" == "nextimg" ]]; then
+
+        isAlpha=$(isProvider "rwall")
+        if [ $? -eq 0 ]; then
+            echo "using alphawallhaven.cc"
+            doFetchImage
+            #no more processing
+            exit
+        fi
+
+        isNik=$(isProvider "nik.bot.nu")
+        if [ $? -eq 0 ]; then
+            echo "using nik.bot.nu"
+            bin/nik.bot.nu nextimg
+            #no more processing
+            exit
+        fi
+
+        isSDN=$(isProvider "sexydesktopnudes.com")
+        if [ $? -eq 0 ]; then
+           echo "using sexydesktopnudes.com"
+            bin/sexydesktopnudes.com nextimg
+            #no more processing
+            exit
+        fi
+        
+        isAW=$(isProvider "adultwalls.com")
+        if [ $? -eq 0 ]; then
+           echo "using adultwalls.com"
+            bin/adultwalls.com nextimg
+            #no more processing
+            exit
+        fi
+
+
+        isRand=$( isProvider "random" )
+        if [ $? -eq 0 ]; then
+           selectRandomProvider
+           #no more processing
+           exit
+        fi
+
+        #Exit the script
+        exit
 fi
 
-# Set $DBUS_SESSION_BUS_ADDRESS enviroment variable if it is not set
-if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]
-then
-    PID=$(pidof "cinnamon-session")
-    export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
+if [[ "$1" == "update" ]]; then
+        if [ "$2" == "fast" ]; then
+          doUpdate "$( configParams 'rwall-source')" 1
+        else
+          doUpdate "$( configParams 'rwall-source')"
+        fi
+        
+        #Exit
+        exit
 fi
 
-# Change the wallpaper
-gsettings set org.gnome.desktop.background picture-uri "file://$rwall_root_directory/tmp/wallpaper-$id.$file_type"
 
+if [[ "$1" == "test" ]]; then
+        echo Wallpaper Exec : $( configParams "wallpaper-exec")
+        echo is Random Provider : $(isProvider "random") ::: $?
+fi
+
+if [[ "$1" == "reset-page" ]]; then
+        tail -1 "tmp/$datafile" | grep '#'
+        if [ $? -eq 0 ]; then
+          setNextPageNo "tmp/$datafile" # no second param
+        else
+          echo "Need to call $0 update first."
+        fi
+        exit
+fi
+
+# Default (Original) processing 
+if [[ -z "$1" ]]; then
+        doFetchImage
+        exit
+fi
+
+# =============== No Code beyond this line =================
+echo "Unknow command. nothing done."
+exit -1
