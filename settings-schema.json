@@ -61,12 +61,12 @@
     "username": {
         "type": "entry",
         "default": "",
-        "description": "Username (register @ alphawallhaven.cc ):"
+        "description": "Username (register @ alpha.wallhaven.cc):"
     },
     "password": {
         "type": "entry",
         "default": "",
-        "description": "Password (register @ alphawallhaven.cc ):"
+        "description": "Password (register @ alpha.wallhaven.cc):"
     },
     
     "div2": {
