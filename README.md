@@ -15,3 +15,10 @@ Alternatively, you may clone this repository into your applets directory by doin
 cd ~/.local/share/cinnamon/applets
 git clone https://github.com/TypicalFooBar/rwall.git rwall@typicalfoobar
 ```
+
+Modifications to the original code:
+
+1. caches the filenames of images
+2. select wallpapers from multiple sources.
+3. randomly select the source.
+4. ability to "login" to alpha.wallhaven.cc (access to NSFW images)
